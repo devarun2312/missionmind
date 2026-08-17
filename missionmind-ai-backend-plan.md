@@ -308,7 +308,7 @@ deterministic validator in Sub-Task 6.
   - Mock returns all LOW risk; verify empty exclusions.
   - Malformed response raises `AgentResponseError`.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
