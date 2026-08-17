@@ -217,7 +217,7 @@ for the mission plan.
   - Mock returns malformed JSON → assert `AgentResponseError` raised.
   - Test that science scores are clamped to [0, 1] (Pydantic validator).
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
