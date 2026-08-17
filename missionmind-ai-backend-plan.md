@@ -264,7 +264,7 @@ reachable within the safe return margin.
     only base return.
   - Malformed response raises `AgentResponseError`.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 

@@ -19,6 +19,7 @@ Shared infrastructure:
 
 from missionmind.agents.base_agent import AgentResponseError, BaseAgent
 from missionmind.agents.client import LLMClient, LLMResponse, WatsonxClient
+from missionmind.agents.resource_agent import ResourceAgent
 from missionmind.agents.science_agent import ScienceAgent
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "BaseAgent",
     "LLMClient",
     "LLMResponse",
+    "ResourceAgent",
     "ScienceAgent",
     "WatsonxClient",
 ]
