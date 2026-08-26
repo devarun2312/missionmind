@@ -512,7 +512,7 @@ one.
   - `NEW_DISCOVERY` → new waypoint appears in revised plan when budget allows.
   - Unknown event type → raises `ValueError`.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
