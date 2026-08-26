@@ -359,7 +359,7 @@ between AI-generated output and executable mission actions.
   - Plan with no science waypoints → fails.
   - Multiple violations accumulate in `violations` list.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
