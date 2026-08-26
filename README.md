@@ -24,12 +24,12 @@ The system balances: scientific value · battery/energy · mission time · commu
 | 4 | `ResourceAgent` — computes energy/time budget, returns `ResourceBudget` | ✅ Complete |
 | 5 | `SafetyAgent` — AI soft-constraint risk assessment, returns `RiskAssessment` | ✅ Complete |
 | 6 | `SafetyValidator` — deterministic hard-constraint gate, returns `ValidationResult` | ✅ Complete |
-| 7 | `MissionCommander` — orchestrates agents, retries with pruned waypoints | 🔲 Pending |
-| 8 | `Planner` — public entry point `plan_mission(rover_state, env_state)` | 🔲 Pending |
-| 9 | `Replanner` — event-driven `replan(current_plan, event, …)` | 🔲 Pending |
-| 10 | Integration tests + final AGENTS.md documentation | 🔲 Pending |
+| 7 | `MissionCommander` — orchestrates agents, retries with pruned waypoints | ✅ Complete |
+| 8 | `Planner` — public entry point `plan_mission(rover_state, env_state)` | ✅ Complete |
+| 9 | `Replanner` — event-driven `replan(current_plan, event, …)` | ✅ Complete |
+| 10 | Integration tests + final AGENTS.md documentation | ✅ Complete |
 
-**296 tests passing.** All tests run offline — zero real AI/API calls.
+**496 tests passing.** All tests run offline — zero real AI/API calls.
 
 ---
 
@@ -53,21 +53,29 @@ missionmind/                        ← repo root / outer package dir
 │   │   ├── client.py               ← LLMClient (Protocol), WatsonxClient, LLMResponse
 │   │   ├── science_agent.py
 │   │   ├── resource_agent.py
-│   │   └── safety_agent.py
+│   │   ├── safety_agent.py
+│   │   └── mission_commander.py    ← MissionCommander, PlanningFailedError
 │   ├── safety/
 │   │   └── validator.py            ← SafetyValidator, ValidationResult (LLM-free)
+│   ├── planning/
+│   │   ├── planner.py              ← plan_mission() public entry point
+│   │   └── replanner.py            ← replan() + ReplanContext
 │   └── prompts/
 │       ├── science_prompt.md
 │       ├── resource_prompt.md
 │       ├── safety_prompt.md
-│       └── commander_prompt.md     ← placeholder for Sub-Task 7
+│       └── commander_prompt.md
 └── tests/
     ├── test_models.py
     ├── test_base_agent.py
     ├── test_science_agent.py
     ├── test_resource_agent.py
     ├── test_safety_agent.py
-    └── test_validator.py
+    ├── test_validator.py
+    ├── test_mission_commander.py
+    ├── test_planner.py
+    ├── test_replanner.py
+    └── test_integration.py         ← end-to-end pipeline tests
 ```
 
 ---
@@ -77,11 +85,16 @@ missionmind/                        ← repo root / outer package dir
 ```powershell
 # Requires MSYS2 ucrt64 Python — 'python' is not on the Windows PATH
 $env:PYTHONPATH = "C:\Users\devar\OneDrive\Desktop\ibmbob\missionmind"
-& "C:\msys64\ucrt64\bin\python.exe" -m pytest missionmind/tests/ -v
+& "C:\msys64\ucrt64\bin\python.exe" -m pytest tests/ -v
 
-# Single test
-& "C:\msys64\ucrt64\bin\python.exe" -m pytest missionmind/tests/test_validator.py::TestEnergyBudgetRule -v
+# Single test file
+& "C:\msys64\ucrt64\bin\python.exe" -m pytest tests/test_validator.py::TestEnergyBudgetRule -v
+
+# Integration tests only
+& "C:\msys64\ucrt64\bin\python.exe" -m pytest tests/test_integration.py -v
 ```
+
+For full architecture and API documentation see **[AGENTS.md](AGENTS.md)**.
 
 ---
 
@@ -113,7 +126,7 @@ $env:PYTHONPATH = "C:\Users\devar\OneDrive\Desktop\ibmbob\missionmind"
 
 ---
 
-## Continuing development
+## Architecture documentation
 
-The approved implementation plan is in `missionmind-ai-backend-plan.md`.
-Read it before starting any new sub-task. Next: **Sub-Task 7 — MissionCommander**.
+Full AI backend architecture, agent APIs, validator rules, event handling,
+and testing guide are in **[AGENTS.md](AGENTS.md)**.

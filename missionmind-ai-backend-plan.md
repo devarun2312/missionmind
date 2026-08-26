@@ -554,7 +554,7 @@ understand the backend interface.
 **Tests**
 - The integration tests in this sub-task are themselves the validation artefact.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
