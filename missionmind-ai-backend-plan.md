@@ -463,7 +463,7 @@ injected) LLM clients.
   - Inject a mock commander → verify `plan_mission` delegates correctly.
   - Missing required key in `rover_state` → raises `ValueError`.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
