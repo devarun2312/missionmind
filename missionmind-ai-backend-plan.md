@@ -421,7 +421,7 @@ to the Safety Validator. If the plan is rejected, it retries with modified const
   - Verify `asyncio.gather` is actually used (parallel execution of science + resource
     agents); use mock call timing or an asyncio spy.
 
-**Status:** [ ] pending
+**Status:** [x] done
 
 ---
 
