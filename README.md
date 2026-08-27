@@ -28,8 +28,9 @@ The system balances: scientific value · battery/energy · mission time · commu
 | 8 | `Planner` — public entry point `plan_mission(rover_state, env_state)` | ✅ Complete |
 | 9 | `Replanner` — event-driven `replan(current_plan, event, …)` | ✅ Complete |
 | 10 | Integration tests + final AGENTS.md documentation | ✅ Complete |
+| API | FastAPI HTTP integration layer — `GET /api/health`, `POST /api/mission/plan`, `POST /api/mission/replan` | ✅ Complete |
 
-**496 tests passing.** All tests run offline — zero real AI/API calls.
+**537 tests passing.** All tests run offline — zero real AI/API calls.
 
 ---
 
@@ -57,6 +58,16 @@ missionmind/                        ← repo root / outer package dir
 │   │   └── mission_commander.py    ← MissionCommander, PlanningFailedError
 │   ├── safety/
 │   │   └── validator.py            ← SafetyValidator, ValidationResult (LLM-free)
+│   ├── api/                        ← FastAPI HTTP integration layer
+│   │   ├── app.py                  ← create_app() factory, CORS middleware
+│   │   ├── main.py                 ← app = create_app(); uvicorn entry point
+│   │   ├── routes/
+│   │   │   ├── health.py           ← GET /api/health
+│   │   │   ├── planning.py         ← POST /api/mission/plan
+│   │   │   └── replanning.py       ← POST /api/mission/replan
+│   │   └── schemas/
+│   │       ├── planning.py         ← RoverStateInput, WaypointInput, EnvStateInput, PlanRequest
+│   │       └── replanning.py       ← MissionEventInput, ReplanRequest
 │   ├── planning/
 │   │   ├── planner.py              ← plan_mission() public entry point
 │   │   └── replanner.py            ← replan() + ReplanContext
@@ -77,6 +88,32 @@ missionmind/                        ← repo root / outer package dir
     ├── test_replanner.py
     └── test_integration.py         ← end-to-end pipeline tests
 ```
+
+---
+
+## Starting the API server
+
+```powershell
+$env:PYTHONPATH = "C:\Users\devar\OneDrive\Desktop\ibmbob\missionmind"
+# Set your IBM watsonx credentials (or local LLM overrides) in the environment
+$env:IBM_WATSONX_API_KEY = "..."
+$env:IBM_WATSONX_URL     = "https://us-south.ml.cloud.ibm.com"
+$env:IBM_WATSONX_PROJECT_ID = "..."
+
+& "C:\msys64\ucrt64\bin\uvicorn.exe" missionmind.api.main:app --reload
+# Server listens on http://127.0.0.1:8000
+# OpenAPI docs: http://127.0.0.1:8000/docs
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/api/health` | Health check — returns `{"status":"ok","backend":"missionmind","version":"..."}` |
+| `POST` | `/api/mission/plan` | Run the full planning pipeline; body: `{"rover_state":{…},"env_state":{…}}` |
+| `POST` | `/api/mission/replan` | Replan in response to a mid-mission event; body: `{"current_plan":{…},"event":{…},"rover_state":{…},"env_state":{…}}` |
+
+CORS is pre-configured for `localhost:3000`, `localhost:5173`, and `localhost:5174` (React/Vite dev servers).
 
 ---
 
