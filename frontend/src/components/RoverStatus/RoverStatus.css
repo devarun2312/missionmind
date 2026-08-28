@@ -1,0 +1,38 @@
+/* =========================================================
+   RoverStatus panel
+   ========================================================= */
+
+.rover-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.battery-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-raised);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.battery-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.battery-bar__fill--high    { background: var(--accent-green); }
+.battery-bar__fill--medium  { background: var(--mars-amber); }
+.battery-bar__fill--low     { background: var(--status-danger); }
+
+.rover-status__phase {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

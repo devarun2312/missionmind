@@ -1,0 +1,73 @@
+/* =========================================================
+   Header
+   ========================================================= */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-6);
+  height: 52px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* left brand */
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.header__logo-mark {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.header__name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  line-height: 1.1;
+}
+
+.header__tagline {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* centre mission ID strip */
+.header__mission-id {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* right controls */
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.header__version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}

@@ -1,0 +1,52 @@
+/* =========================================================
+   EventLog panel
+   ========================================================= */
+
+.event-log {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.event-log__entry {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: 5px var(--sp-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.event-log__entry:last-child { border-bottom: none; }
+
+.event-log__time {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 10px;
+  min-width: 60px;
+}
+
+.event-log__msg {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.event-log__entry--info    .event-log__msg { color: var(--text-primary); }
+.event-log__entry--success .event-log__msg { color: var(--accent-green); }
+.event-log__entry--warning .event-log__msg { color: var(--mars-amber); }
+.event-log__entry--error   .event-log__msg { color: var(--status-danger); }
+
+.event-log__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.event-log__entry--info    .event-log__dot { background: var(--text-muted); }
+.event-log__entry--success .event-log__dot { background: var(--accent-green); }
+.event-log__entry--warning .event-log__dot { background: var(--mars-amber); }
+.event-log__entry--error   .event-log__dot { background: var(--status-danger); }

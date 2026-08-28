@@ -1,0 +1,71 @@
+/* =========================================================
+   MissionMind — CSS Design Tokens
+   Dark aerospace mission-control theme.
+   ========================================================= */
+
+:root {
+  /* Background layers */
+  --bg-void:     #080c0f;
+  --bg-surface:  #0d1117;
+  --bg-panel:    #111820;
+  --bg-panel-alt:#141e28;
+  --bg-raised:   #1a2535;
+  --bg-hover:    #1f2d3d;
+
+  /* Borders */
+  --border:        #1e2d3d;
+  --border-bright: #2a3f55;
+
+  /* Text */
+  --text-primary:  #c9d1d9;
+  --text-secondary:#7a8a9a;
+  --text-muted:    #4a5568;
+  --text-bright:   #e6edf3;
+
+  /* Accent — operational green */
+  --accent-green:       #39d353;
+  --accent-green-dim:   #1a5c28;
+  --accent-green-glow:  rgba(57, 211, 83, 0.15);
+
+  /* Mars / terrain — rust orange */
+  --mars-rust:    #c84b17;
+  --mars-orange:  #e07a3a;
+  --mars-amber:   #f0a848;
+  --mars-dim:     #5c2a10;
+
+  /* Status colors */
+  --status-active:      #39d353;
+  --status-warning:     #f0a848;
+  --status-danger:      #f85149;
+  --status-info:        #58a6ff;
+  --status-muted:       #4a5568;
+  --status-replanning:  #a5a0f8;
+
+  /* Science waypoint */
+  --wp-science:   #58a6ff;
+  --wp-base:      #39d353;
+  --wp-hazard:    #f85149;
+  --wp-discovery: #c084fc;
+
+  /* Typography */
+  --font-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "Fira Mono", "Consolas", monospace;
+
+  /* Spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius:    6px;
+  --radius-lg: 10px;
+
+  /* Glow / shadow */
+  --panel-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  --glow-green:   0 0 8px rgba(57, 211, 83, 0.25);
+  --glow-amber:   0 0 8px rgba(240, 168, 72, 0.25);
+}

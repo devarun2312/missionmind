@@ -1,0 +1,75 @@
+/* =========================================================
+   MarsMap — SVG mission map
+   ========================================================= */
+
+.mars-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.mars-map svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Terrain grid lines are drawn in SVG */
+
+/* Waypoint label */
+.mars-map__label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  fill: var(--text-secondary);
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+/* Coordinate legend */
+.mars-map__legend {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mars-map__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.mars-map__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Pulsing ring on discovery waypoints */
+@keyframes discovery-ring {
+  0%   { r: 10px; opacity: 0.8; }
+  100% { r: 22px; opacity: 0; }
+}
+
+.pulse-ring {
+  animation: discovery-ring 1.6s ease-out infinite;
+}
+
+/* Hazard blink */
+@keyframes hazard-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.hazard-ring {
+  animation: hazard-blink 1.2s ease-in-out infinite;
+}

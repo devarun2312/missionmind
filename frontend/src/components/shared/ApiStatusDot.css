@@ -1,0 +1,45 @@
+/* =========================================================
+   ApiStatusDot — connection indicator
+   ========================================================= */
+
+.api-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.api-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.api-status__dot--online {
+  background: var(--accent-green);
+  box-shadow: var(--glow-green);
+  animation: pulse-green 2.5s ease-in-out infinite;
+}
+
+.api-status__dot--offline {
+  background: var(--status-danger);
+}
+
+.api-status__dot--unknown {
+  background: var(--text-muted);
+  animation: pulse-amber 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+@keyframes pulse-amber {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
