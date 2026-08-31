@@ -306,3 +306,151 @@ class WatsonxClient:
             prompt_tokens=usage.get("prompt_tokens", 0),
             completion_tokens=usage.get("completion_tokens", 0),
         )
+
+
+# ---------------------------------------------------------------------------
+# Local development implementation — Ollama (IBM Granite)
+# ---------------------------------------------------------------------------
+
+class OllamaClient:
+    """Async LLM client targeting a local Ollama server.
+
+    Calls ``POST {base_url}/api/chat`` with ``stream=false`` and
+    ``format="json"`` so the model is strongly encouraged to return valid JSON.
+
+    Only ``response["message"]["content"]`` is forwarded to ``BaseAgent``
+    for Pydantic parsing.  All other fields — ``thinking``, timing metadata,
+    token counts — are silently discarded.
+
+    Parameters
+    ----------
+    base_url:
+        Base URL of the Ollama server (no trailing slash).
+        Defaults to ``config.OLLAMA_BASE_URL`` (``http://127.0.0.1:11434``).
+    default_model:
+        Model tag used when callers don't override it.
+        Defaults to ``config.OLLAMA_MODEL`` (``granite4.2:3b``).
+    timeout:
+        Per-request timeout in seconds.  Granite on CPU can be slow — the
+        default is intentionally generous.
+    """
+
+    _CHAT_PATH = "/api/chat"
+
+    def __init__(
+        self,
+        *,
+        base_url: str | None = None,
+        default_model: str | None = None,
+        timeout: float = 120.0,
+    ) -> None:
+        self._base_url = (base_url or config.OLLAMA_BASE_URL).rstrip("/")
+        self._default_model = default_model or config.OLLAMA_MODEL
+        self._timeout = timeout
+
+    # ------------------------------------------------------------------
+    # Public interface — satisfies the LLMClient protocol
+    # ------------------------------------------------------------------
+
+    async def complete(
+        self,
+        *,
+        system_prompt: str,
+        user_message: str,
+        model: str | None = None,
+        temperature: float = 0.2,
+        max_tokens: int = 2048,
+    ) -> LLMResponse:
+        """POST a chat request to Ollama and return a normalised LLMResponse.
+
+        Parameters match the ``LLMClient`` protocol exactly so
+        ``OllamaClient`` is a drop-in replacement for ``WatsonxClient``.
+        """
+        chosen_model = model or self._default_model
+        url = self._base_url + self._CHAT_PATH
+        structured_user_message = (
+            user_message
+            + "\n\nIMPORTANT OUTPUT RULES:"
+            + "\n- Return ONLY one complete valid JSON object."
+            + "\n- Keep every justification/reasoning string concise: maximum one sentence."
+            + "\n- Do not show calculations, internal reasoning, or chain-of-thought."
+            + "\n- Every numeric JSON value must be a literal number."
+            + "\n- Calculate arithmetic before producing JSON; never put arithmetic expressions in JSON values."
+            + "\n- Do not include markdown or text outside the JSON object."
+        )
+        payload: dict[str, Any] = {
+            "model": chosen_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": structured_user_message},
+            ],
+            "stream": False,
+            "format": "json",
+            "think": False,
+            "options": {
+                "temperature": 0.0,
+                "num_predict": max(max_tokens, 4096),
+                "num_ctx": 8192,
+            },
+        }
+
+        logger.debug(
+            "OllamaClient request | model=%s | url=%s | prompt_chars=%d",
+            chosen_model,
+            url,
+            len(system_prompt) + len(user_message),
+        )
+
+        async with httpx.AsyncClient(timeout=self._timeout) as http:
+            try:
+                resp = await http.post(url, json=payload)
+            except httpx.TimeoutException as exc:
+                raise LLMClientError(
+                    f"Ollama request timed out after {self._timeout}s"
+                ) from exc
+            except httpx.RequestError as exc:
+                raise LLMClientError(
+                    f"Ollama request failed (is Ollama running?): {exc}"
+                ) from exc
+
+        if resp.status_code >= 400:
+            raise LLMClientError(
+                f"Ollama endpoint returned HTTP {resp.status_code}: {resp.text[:400]}"
+            )
+
+        return self._parse_response(resp.json(), chosen_model)
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _parse_response(data: dict[str, Any], model_hint: str = "") -> LLMResponse:
+        """Extract ``message.content`` from the Ollama /api/chat response.
+
+        The ``thinking`` field and all timing/metadata fields are
+        intentionally discarded.
+
+        Raises
+        ------
+        LLMClientError
+            If ``message`` or ``content`` are absent or if content is empty.
+        """
+        try:
+            content: str = data["message"]["content"]
+        except (KeyError, TypeError) as exc:
+            raise LLMClientError(
+                f"Ollama response missing 'message.content': {json.dumps(data)[:400]}"
+            ) from exc
+
+        if not content:
+            raise LLMClientError(
+                "Ollama response contained an empty 'message.content'"
+            )
+
+        return LLMResponse(
+            content=content,
+            model=data.get("model", model_hint),
+            prompt_tokens=data.get("prompt_eval_count", 0),
+            completion_tokens=data.get("eval_count", 0),
+        )

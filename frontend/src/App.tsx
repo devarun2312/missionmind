@@ -13,7 +13,7 @@ import EventLog from './components/EventLog/EventLog';
 import ErrorBanner from './components/shared/ErrorBanner';
 
 // API
-import { checkHealth } from './api/missionApi';
+import { checkHealth, planMission } from './api/missionApi';
 
 // Types & data
 import type {
@@ -43,7 +43,7 @@ function makeLogEntry(
 // ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
-
+let _healthChecked = false;
 export default function App() {
   // ── State ──────────────────────────────────────────────────────────────
   // NOTE: setRoverState, setCurrentPlan, setIsPlanning, setError are used
@@ -69,8 +69,10 @@ export default function App() {
 
   // ── Health check on mount ───────────────────────────────────────────────
   useEffect(() => {
+    if (_healthChecked) return;
+    _healthChecked = true;
     addLog('Checking MissionMind API connection…', 'info');
-    checkHealth()
+    checkHealth() 
       .then(health => {
         setApiStatus('online');
         setApiVersion(health.version);
@@ -80,13 +82,46 @@ export default function App() {
         setApiStatus('offline');
         addLog('API offline — start uvicorn to enable mission planning', 'warning');
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Stubs — wired in Phase 5 / 6 ────────────────────────────────────────
-  const handleStartMission = useCallback(() => {
-    addLog('START MISSION — planning will be wired in Phase 5', 'warning');
-  }, [addLog]);
+  const handleStartMission = useCallback(async () => {
+    if (isPlanning) return;
+
+    _setError(null);
+    _setIsPlanning(true);
+
+    addLog('Mission start requested', 'info');
+    addLog(
+      'MissionMind evaluating science, resources, and safety...',
+      'info',
+    );
+
+    try {
+      const plan = await planMission({
+        rover_state: roverState,
+        env_state: envState,
+      });
+
+      _setCurrentPlan(plan);
+
+      addLog(
+        `Mission plan accepted — confidence ${Math.round(plan.confidence * 100)}%`,
+        'success',
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'MissionMind encountered an unexpected planning error.';
+
+      _setError(message);
+      addLog(`Mission planning failed — ${message}`, 'error');
+    } finally {
+      _setIsPlanning(false);
+    }
+  }, [addLog, envState, isPlanning, roverState]);
 
   const handleEvent = useCallback((eventType: string) => {
     addLog(`Event triggered: ${eventType} — replanning will be wired in Phase 6`, 'warning');

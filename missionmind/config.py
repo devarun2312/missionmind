@@ -83,3 +83,26 @@ MAX_TERRAIN_RISK_SCORE: float = float(
 MAX_PLANNING_RETRIES: int = int(
     os.environ.get("MAX_PLANNING_RETRIES", "3")
 )
+
+# ---------------------------------------------------------------------------
+# LLM provider selection
+# ---------------------------------------------------------------------------
+
+# Which LLM backend the planner uses.
+# "ollama"  — local IBM Granite via Ollama (no credentials required)
+# "watsonx" — IBM watsonx AI (default; IBM credentials required)
+MISSIONMIND_LLM_PROVIDER: str = os.environ.get(
+    "MISSIONMIND_LLM_PROVIDER", "watsonx"
+).lower()
+
+# ---------------------------------------------------------------------------
+# Ollama (local Granite development)
+# ---------------------------------------------------------------------------
+
+# Base URL for the local Ollama HTTP server.
+OLLAMA_BASE_URL: str = os.environ.get(
+    "OLLAMA_BASE_URL", "http://127.0.0.1:11434"
+)
+
+# Ollama model tag to use.
+OLLAMA_MODEL: str = os.environ.get("OLLAMA_MODEL", "granite4.2:3b")

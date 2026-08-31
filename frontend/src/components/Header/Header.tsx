@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function Header({ apiStatus, version }: Props) {
-  const missionId = 'MSN-2025-ARES-01';
+  const missionId = 'MSN-2026-ARES-01';
 
   return (
     <header className="header">

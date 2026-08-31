@@ -15,12 +15,13 @@
   padding: var(--sp-2) var(--sp-5);
   flex-shrink: 0;
   background: var(--bg-surface);
-  border-bottom: 1px solid rgba(248,81,73,0.2);
+  border-bottom: 1px solid rgba(248, 81, 73, 0.2);
 }
 
 /* ── Main workspace ── */
 .app__workspace {
   flex: 1;
+  min-height: 0;
   display: flex;
   overflow: hidden;
 }
@@ -34,17 +35,26 @@
   padding: var(--sp-3);
   overflow: hidden;
   min-width: 0;
+  min-height: 0;
 }
 
 /* ── Right column: panels ── */
 .app__right {
   width: 340px;
   flex-shrink: 0;
+  min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-3) var(--sp-3) 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+
+.app__right>* {
+  flex-shrink: 0;
 }
 
 /* ── Bottom strip: route + events + log ── */

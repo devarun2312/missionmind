@@ -60,7 +60,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from missionmind.agents.client import WatsonxClient
+from missionmind import config
+from missionmind.agents.client import LLMClient, OllamaClient, WatsonxClient
 from missionmind.agents.mission_commander import MissionCommander
 from missionmind.agents.resource_agent import ResourceAgent
 from missionmind.agents.safety_agent import SafetyAgent
@@ -112,19 +113,32 @@ ENV_STATE_KEYS: tuple[str, ...] = (
 # LLM client factory
 # ---------------------------------------------------------------------------
 
-def _build_llm_client() -> WatsonxClient:
-    """Construct the production LLM client.
+def _build_llm_client() -> LLMClient:
+    """Construct the production LLM client based on ``MISSIONMIND_LLM_PROVIDER``.
 
-    Returns the existing ``WatsonxClient`` which reads all IBM watsonx
-    credentials from environment variables.  No credentials are handled
-    here.  Tests can patch this function at the module level to inject a
-    mock without touching the rest of the wiring.
+    ``MISSIONMIND_LLM_PROVIDER=ollama``   → ``OllamaClient``  (local Granite)
+    ``MISSIONMIND_LLM_PROVIDER=watsonx``  → ``WatsonxClient`` (IBM watsonx, default)
+
+    Tests patch this function at the module level to inject a mock.
 
     Returns
     -------
-    WatsonxClient
+    LLMClient
         The shared production LLM backend used by all agents.
     """
+    if config.MISSIONMIND_LLM_PROVIDER == "ollama":
+        logger.info(
+            "planner: OllamaClient selected (model=%s, url=%s)",
+            config.OLLAMA_MODEL,
+            config.OLLAMA_BASE_URL,
+        )
+        return OllamaClient()
+
+    if config.MISSIONMIND_LLM_PROVIDER != "watsonx":
+        logger.warning(
+            "planner: unknown MISSIONMIND_LLM_PROVIDER=%r, falling back to WatsonxClient",
+            config.MISSIONMIND_LLM_PROVIDER,
+        )
     return WatsonxClient()
 
 

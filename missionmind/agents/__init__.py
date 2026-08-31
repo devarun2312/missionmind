@@ -18,7 +18,7 @@ PlanningFailedError — raised when MissionCommander exhausts all retry attempts
 """
 
 from missionmind.agents.base_agent import AgentResponseError, BaseAgent
-from missionmind.agents.client import LLMClient, LLMResponse, WatsonxClient
+from missionmind.agents.client import LLMClient, LLMResponse, OllamaClient, WatsonxClient
 from missionmind.agents.mission_commander import MissionCommander, PlanningFailedError
 from missionmind.agents.resource_agent import ResourceAgent
 from missionmind.agents.safety_agent import SafetyAgent
@@ -30,6 +30,7 @@ __all__ = [
     "LLMClient",
     "LLMResponse",
     "MissionCommander",
+    "OllamaClient",
     "PlanningFailedError",
     "ResourceAgent",
     "SafetyAgent",
