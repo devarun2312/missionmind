@@ -40,6 +40,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+from decimal import Decimal, InvalidOperation
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
@@ -336,6 +338,11 @@ class OllamaClient:
     """
 
     _CHAT_PATH = "/api/chat"
+    _NUMERIC_ADD_EXPR = re.compile(
+        r'(?P<prefix>"(?:[^"\\]|\\.)+"\s*:\s*)'
+        r'(?P<expr>-?\d+(?:\.\d+)?(?:\s*\+\s*-?\d+(?:\.\d+)?)+)'
+        r'(?P<suffix>\s*[,}])'
+    )
 
     def __init__(
         self,
@@ -423,7 +430,42 @@ class OllamaClient:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+        _NUMERIC_ADD_EXPR = re.compile(
+        r'(?P<prefix>"(?:[^"\\]|\\.)+"\s*:\s*)'
+        r'(?P<expr>-?\d+(?:\.\d+)?(?:\s*\+\s*-?\d+(?:\.\d+)?)+)'
+        r'(?P<suffix>\s*[,}])'
+    )
 
+    @staticmethod
+    def _repair_numeric_expressions(content: str) -> str:
+        """Convert simple numeric addition expressions into JSON numbers.
+
+        Granite occasionally emits values such as:
+            "total_energy": 22.5 + 14.0 + 19.0
+
+        That is mathematically valid but not valid JSON. Only simple
+        addition of numeric literals is repaired; arbitrary expressions
+        are never evaluated.
+        """
+
+        def replace(match: re.Match[str]) -> str:
+            expression = match.group("expr")
+
+            try:
+                total = sum(
+                    (Decimal(part.strip()) for part in expression.split("+")),
+                    Decimal("0"),
+                )
+            except InvalidOperation:
+                return match.group(0)
+
+            return (
+                f'{match.group("prefix")}'
+                f'{format(total, "f")}'
+                f'{match.group("suffix")}'
+            )
+
+        return OllamaClient._NUMERIC_ADD_EXPR.sub(replace, content)
     @staticmethod
     def _parse_response(data: dict[str, Any], model_hint: str = "") -> LLMResponse:
         """Extract ``message.content`` from the Ollama /api/chat response.
@@ -447,7 +489,7 @@ class OllamaClient:
             raise LLMClientError(
                 "Ollama response contained an empty 'message.content'"
             )
-
+        content = OllamaClient._repair_numeric_expressions(content)
         return LLMResponse(
             content=content,
             model=data.get("model", model_hint),

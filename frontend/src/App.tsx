@@ -13,11 +13,12 @@ import EventLog from './components/EventLog/EventLog';
 import ErrorBanner from './components/shared/ErrorBanner';
 
 // API
-import { checkHealth, planMission } from './api/missionApi';
+import { checkHealth, planMission, replanMission } from './api/missionApi';
 
 // Types & data
 import type {
   MissionPlan,
+  MissionEvent,
   ApiStatus,
   EventLogEntry,
 } from './types/mission';
@@ -50,7 +51,7 @@ export default function App() {
   // in Phase 5 / 6 handlers. Prefixed with _ to satisfy noUnusedLocals
   // until those phases are wired.
   const [roverState, _setRoverState] = useState(INITIAL_ROVER_STATE);
-  const [envState] = useState(INITIAL_ENV_STATE);
+  const [envState, setEnvState] = useState(INITIAL_ENV_STATE);
   const [currentPlan, _setCurrentPlan] = useState<MissionPlan | null>(null);
   const [apiStatus, setApiStatus] = useState<ApiStatus>('unknown');
   const [apiVersion, setApiVersion] = useState<string | undefined>(undefined);
@@ -59,8 +60,8 @@ export default function App() {
   const [eventLog, setEventLog] = useState<EventLogEntry[]>([
     makeLogEntry('Mission control initialized', 'info'),
   ]);
-  const [hazardIds] = useState<Set<string>>(new Set());
-  const [discoveryId] = useState<string | null>(null);
+  const [hazardIds, setHazardIds] = useState<Set<string>>(new Set());
+  const [discoveryId, setDiscoveryId] = useState<string | null>(null);
 
   // ── Event log helper ────────────────────────────────────────────────────
   const addLog = useCallback((message: string, type: EventLogEntry['type'] = 'info') => {
@@ -72,7 +73,7 @@ export default function App() {
     if (_healthChecked) return;
     _healthChecked = true;
     addLog('Checking MissionMind API connection…', 'info');
-    checkHealth() 
+    checkHealth()
       .then(health => {
         setApiStatus('online');
         setApiVersion(health.version);
@@ -123,9 +124,156 @@ export default function App() {
     }
   }, [addLog, envState, isPlanning, roverState]);
 
-  const handleEvent = useCallback((eventType: string) => {
-    addLog(`Event triggered: ${eventType} — replanning will be wired in Phase 6`, 'warning');
-  }, [addLog]);
+  const handleEvent = useCallback(async (eventType: string) => {
+    if (isPlanning || !currentPlan) return;
+
+    let event: MissionEvent;
+
+    switch (eventType) {
+      case 'BATTERY_FAILURE':
+        event = {
+          event_type: 'BATTERY_FAILURE',
+          severity: 1.0,
+          payload: {
+            battery_pct: 0.07,
+          },
+        };
+        break;
+
+      case 'TERRAIN_HAZARD':
+        event = {
+          event_type: 'TERRAIN_HAZARD',
+          severity: 0.8,
+          payload: {
+            waypoint_id: 'wp-crater-ridge',
+          },
+        };
+        break;
+
+      case 'NEW_DISCOVERY':
+        event = {
+          event_type: 'NEW_DISCOVERY',
+          severity: 0.6,
+          payload: {
+            id: 'wp-subsurface-lake',
+            x: 90,
+            y: 200,
+            label: 'Subsurface Lake',
+            scientific_value: 0.95,
+            terrain_risk: 0.12,
+            estimated_travel_time_minutes: 22,
+            estimated_energy_wh: 11.0,
+          },
+        };
+        break;
+
+      case 'RETURN_TO_BASE':
+        event = {
+          event_type: 'RETURN_TO_BASE',
+          severity: 1.0,
+          payload: {},
+        };
+        break;
+
+      case 'COMM_LOSS':
+        event = {
+          event_type: 'COMM_LOSS',
+          severity: 0.7,
+          payload: {
+            safe_comm_radius_m: 150.0,
+          },
+        };
+        break;
+
+      default:
+        addLog(`Unknown mission event: ${eventType}`, 'error');
+        return;
+    }
+
+    _setError(null);
+    _setIsPlanning(true);
+
+    addLog(`Mission event detected — ${event.event_type}`, 'warning');
+    addLog('MissionMind replanning mission...', 'info');
+
+    try {
+      const nextRoverState =
+        event.event_type === 'BATTERY_FAILURE'
+          ? {
+            ...roverState,
+            battery_pct: event.payload.battery_pct ?? roverState.battery_pct,
+          }
+          : roverState;
+
+      const plan = await replanMission({
+        current_plan: currentPlan,
+        event,
+        rover_state: nextRoverState,
+        env_state: envState,
+      });
+
+      _setCurrentPlan(plan);
+
+      if (event.event_type === 'BATTERY_FAILURE') {
+        _setRoverState(nextRoverState);
+      }
+
+      if (event.event_type === 'TERRAIN_HAZARD') {
+        setHazardIds(prev => {
+          const next = new Set(prev);
+          next.add('wp-crater-ridge');
+          return next;
+        });
+      }
+
+      if (event.event_type === 'NEW_DISCOVERY') {
+        setDiscoveryId('wp-subsurface-lake');
+
+        setEnvState(prev => ({
+          ...prev,
+          candidate_waypoints: prev.candidate_waypoints.some(
+            waypoint => waypoint.id === 'wp-subsurface-lake',
+          )
+            ? prev.candidate_waypoints
+            : [
+              ...prev.candidate_waypoints,
+              {
+                id: 'wp-subsurface-lake',
+                x: 90,
+                y: 200,
+                label: 'Subsurface Lake',
+                scientific_value: 0.95,
+                terrain_risk: 0.12,
+                estimated_travel_time_minutes: 22,
+                estimated_energy_wh: 11.0,
+                is_base: false,
+              },
+            ],
+        }));
+      }
+
+      addLog(
+        `Mission replanned — ${plan.status}, confidence ${Math.round(plan.confidence * 100)}%`,
+        'success',
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'MissionMind encountered an unexpected replanning error.';
+
+      _setError(message);
+      addLog(`Mission replanning failed — ${message}`, 'error');
+    } finally {
+      _setIsPlanning(false);
+    }
+  }, [
+    addLog,
+    currentPlan,
+    envState,
+    isPlanning,
+    roverState,
+  ]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
