@@ -97,38 +97,29 @@ MissionMind also contains a `WatsonxClient` abstraction so the LLM backend can b
 
 ## Architecture
 
-                    ┌─────────────────────┐
-                    │   MissionMind UI    │
-                    │    React + Vite     │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │      FastAPI        │
-                    │   Mission API       │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-              ┌────────────────────────────────┐
-              │       Mission Planner          │
-              └───────────────┬────────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
- ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
- │ Science Agent  │  │ Resource Agent │  │  Safety Agent  │
- └────────┬───────┘  └────────┬───────┘  └────────┬───────┘
-          └───────────────────┼───────────────────┘
-                              ▼
-                  ┌──────────────────────┐
-                  │  Mission Commander   │
-                  └──────────┬───────────┘
-                             ▼
-                  ┌──────────────────────┐
-                  │ Deterministic Safety │
-                  │      Validator       │
-                  └──────────┬───────────┘
-                             ▼
-                  ┌──────────────────────┐
-                  │   Safe Mission Plan  │
-                  └──────────────────────┘
+MissionMind follows a layered multi-agent architecture:
+
+```text
+React Mission Control Dashboard
+            |
+            v
+        FastAPI API
+            |
+            v
+      Mission Planner
+            |
+    +-------+-------+
+    |       |       |
+    v       v       v
+ Science  Resource  Safety
+  Agent    Agent    Agent
+    \       |       /
+     \      |      /
+      v     v     v
+    Mission Commander
+            |
+            v
+ Deterministic Safety Validator
+            |
+            v
+      Safe Mission Plan
