@@ -167,3 +167,43 @@ For full architecture and API documentation see **[AGENTS.md](AGENTS.md)**.
 
 Full AI backend architecture, agent APIs, validator rules, event handling,
 and testing guide are in **[AGENTS.md](AGENTS.md)**.
+## MissionMind Demo
+
+MissionMind is an AI-powered autonomous Mars rover mission commander built for the IBM Bob Hackathon.
+
+It combines multiple specialist agents with deterministic safety validation to create and dynamically replan rover missions when conditions change.
+
+### AI Architecture
+
+MissionMind uses:
+
+- **Science Agent** — prioritizes scientifically valuable targets.
+- **Resource Agent** — evaluates battery, energy, and time constraints.
+- **Safety Agent** — evaluates terrain, weather, communications, and mission risk.
+- **Mission Commander** — combines specialist recommendations into a mission plan.
+- **Deterministic Safety Validator** — independently enforces hard safety constraints before a plan is accepted.
+
+The demo runs **IBM Granite 4.2 3B locally through Ollama**, allowing mission intelligence to operate locally without depending on a remote connection.
+
+IBM Bob was used as the primary development assistant throughout the project.
+
+### Autonomous Replanning Events
+
+MissionMind can dynamically replan for:
+
+- Battery Failure
+- Terrain Hazard
+- New Scientific Discovery
+- Communication Loss
+- Return to Base
+
+Safety-critical conditions such as critical battery and explicit Return to Base requests use deterministic emergency behavior rather than relying on LLM judgment.
+
+### Run the Backend
+
+From the repository root:
+
+```powershell
+$env:MISSIONMIND_LLM_PROVIDER = "ollama"
+$venvSite = (Resolve-Path ".venv\lib\python3.12\site-packages").Path
+& "C:\msys64\ucrt64\bin\python.exe" -c "import sys; sys.path.append(r'$venvSite'); import uvicorn; uvicorn.run('missionmind.api.main:app', host='127.0.0.1', port=8000)"
